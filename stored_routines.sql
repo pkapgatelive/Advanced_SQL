@@ -106,3 +106,49 @@ END;
 call employees.emp_average_salary(11300);
 
 
+-- Store Procedure with the in and out variable.
+-- In this need to keep in minid that we do use the in, out and into keywords while performing the store procesure.
+
+
+Drop procedure if EXISTS emp_avg_salary_out;
+
+Create procedure emp_avg_salary_out(in p_emp_no INTEGER, out p_avg_salary Decimal
+(10,2))
+BEGIN
+    select Avg(s.salary)
+    into p_avg_salary
+    from employees e Join salaries s on e.emp_no = s.emp_no
+    where e.emp_no = p_emp_no;
+end;
+
+-- Calling the procedure
+-- set p_avg_salary = 0;
+
+call emp_avg_salary_out(11300, @p_avg_salary);
+
+select @p_avg_salary;
+
+
+-- Stored procedures with an output parameter - exercise
+/*
+Create a procedure called ‘emp_info’ that uses as parameters 
+the first and the last name of an individual, and returns their employee number.
+*/
+
+drop PROCEDURE if exists emp_info;
+
+create procedure emp_info(in p_first_name CHAR
+(10), in p_last_name char
+(10), out p_emp_no int)
+BEGIN
+    select e.emp_no
+    into p_emp_no
+    from employees e
+    where e.first_name = p_first_name and e.last_name = p_last_name limit 1;
+END;
+
+call emp_info
+('Georgi',	'Facello', @p_emp_no);
+
+SELECT @p_emp_no;
+
