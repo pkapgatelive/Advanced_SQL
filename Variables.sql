@@ -1,6 +1,6 @@
 -- SQL Variables
 -- Variable created using the SET keyword followed by the @
-
+use employees;
 SET @v_avg_salary = 0;
 
 select @v_avg_salary;
@@ -8,7 +8,7 @@ select @v_avg_salary;
 call employees.emp_avg_salary_out(11300, @v_avg_salary);
 
 select @v_avg_salary;
-
+ 
 /*
 In MySQL, variables can be categorized into two main types: local variables and user-defined variables.
 
@@ -203,3 +203,119 @@ Technically speaking, this operation isn’t the safest one out there. Neverthel
 In conclusion, remember that sometimes the Binary Log may be disabled anyway and you don’t have to take any of the above actions. In that case, we simply hope you’ve enjoyed reading this article! Thank you!
 */
 
+
+-- Excersise:
+
+/*
+User-defined functions in MySQL - exercise
+Create a function called ‘emp_info’ that takes for parameters the first and last name of an employee, 
+and returns the salary from the newest contract of that employee.
+
+Hint: In the BEGIN-END block of this program, you need to declare and use two variables 
+– v_max_from_date that will be of the DATE type, and v_salary, that will be of the DECIMAL (10,2) type.
+
+Finally, select this function.
+*/
+
+ 
+
+Drop function if Exists f_emp_info;
+
+Create Function f_emp_info (p_first_name VARCHAR(255), p_last_name VARCHAR(255))
+RETURNS DECIMAL (10,2)
+DETERMINISTIC
+NO SQL
+READS SQL DATA
+BEGIN
+
+    DECLARE v_max_from_date Date;
+    DECLARE v_salary DECIMAL(10,2);
+
+    Select max(s.from_date)
+    into v_max_from_date
+    from employees e 
+join Salaries s ON e.emp_no = s.emp_no 
+where e.first_name = p_first_name and e.last_name = p_last_name;
+
+Select max(s.salary)
+into v_salary
+from employees e Join Salaries s on e.emp_no = s.emp_no
+where 
+    e.first_name = p_first_name
+    and
+    e.last_name = p_last_name
+    and
+    s.from_date = v_max_from_date;
+
+
+RETURN v_salary;
+
+END;
+
+Select f_emp_info('Aruna', 'Journel') as Aruna_Latest_salary;
+
+--- Difference Between Store Procedure and Function:
+
+/*
+
+Stored procedures and functions are database objects that contain a set of SQL statements and procedural code. While they share similarities, there are key differences between stored procedures and functions in the context of relational databases like MySQL:
+
+1. **Return Type:**
+   - Stored Procedure: May or may not return a value. If it does, the value is returned using OUT or INOUT parameters.
+   - Function: Must return a value using the RETURN statement.
+
+2. **Usage in SELECT Statements:**
+   - Stored Procedure: Cannot be used directly in SELECT statements.
+   - Function: Can be used in SELECT statements and is treated as an expression.
+
+3. **Transaction Control:**
+   - Stored Procedure: Can contain transaction control statements like COMMIT and ROLLBACK.
+   - Function: Generally, does not include transaction control statements. Functions are usually used for computation and return a value.
+
+4. **Access to Result Sets:**
+   - Stored Procedure: Can return multiple result sets.
+   - Function: Typically returns a single result set.
+
+5. **Execution Context:**
+   - Stored Procedure: Can change the state of the database, modify data, and perform various operations.
+   - Function: Generally considered side-effect-free. It should not modify data and is intended for computation purposes.
+
+6. **Error Handling:**
+   - Stored Procedure: Can use error-handling mechanisms like TRY...CATCH blocks.
+   - Function: Limited error handling options compared to stored procedures.
+
+7. **Input/Output Parameters:**
+   - Stored Procedure: Can have input, output, and input-output parameters.
+   - Function: Accepts only input parameters and returns a single value.
+
+8. **Usage in Triggers:**
+   - Stored Procedure: Can be called from triggers.
+   - Function: Cannot be directly called from triggers.
+
+9. **Invocation Syntax:**
+   - Stored Procedure: Called using the CALL statement.
+   - Function: Invoked like a regular function in SQL expressions.
+
+Here is a basic example illustrating the difference:
+
+Stored Procedure:
+```sql
+CREATE PROCEDURE example_procedure(IN p_param INT, OUT p_result INT)
+BEGIN
+    -- Procedure logic
+    SET p_result = p_param * 2;
+END;
+```
+
+Function:
+```sql
+CREATE FUNCTION example_function(p_param INT) RETURNS INT
+BEGIN
+    -- Function logic
+    RETURN p_param * 2;
+END;
+```
+
+In summary, stored procedures are more versatile and can perform a wide range of operations, while functions are primarily designed for computations and return a single value. The choice between them depends on the specific requirements of your database application.
+
+*/
